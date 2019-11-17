@@ -31,10 +31,16 @@ class NaiveBayes:
         # Create training and testing sets
         # each with 906 (40%) spam, 1359 (60%) not-spam
         # 2265 total examples each set
-        trainingset = isspam[:906] + notspam[:1359]
-        self.trainingset = np.array(trainingset)
-        testingset = isspam[907:907+907] + notspam[1360:1360+1359]
-        self.testingset = np.array(testingset)
+        self.trainingspam = np.array(isspam[:906])
+        self.trainingnot = np.array(notspam[:1359])
+        self.testingspam = np.array(isspam[907:907+907])
+        self.testingnot = np.array(notspam[1360:1360+1359])
+        # Total size (number of examples) of each set
+        self.trainingsize = self.trainingspam.shape[0] + self.trainingnot.shape[0]
+        self.testingsize = self.testingspam.shape[0] + self.testingnot.shape[0]
+
+    # def computepriors(self):
+
 
 
 def main():
