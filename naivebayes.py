@@ -116,10 +116,31 @@ class NaiveBayes:
                 classifiedspam.append(inputvector)
             else:
                 classifiednot.append(inputvector)
+        # Compute accuracy values for confusion matrix
+        truepositives = len(classifiedspam)
+        falsepositives = 0
+        for line in classifiedspam:
+            # If example marked as not spam classed as spam...
+            if line[-1] == 0:
+                truepositives -= 1
+                falsepositives += 1
+        truenegatives = len(classifiednot)
+        falsenegatives = 0
+        for line in classifiednot:
+            # If example marked as spam classed as not...
+            if line[-1] == 1:
+                truenegatives -= 1
+                falsenegatives += 1
+        precision = truepositives/(truepositives + falsepositives)
+        recall = truepositives/(truepositives + falsenegatives)
+        accuracy = (truepositives + truenegatives) / (truepositives + truenegatives + falsepositives + falsenegatives)
         resultdict = {"spam": np.array(classifiedspam),
-                      "notspam": np.array(classifiednot)}
+                      "notspam": np.array(classifiednot),
+                      "confmatrix": [[truepositives, falsenegatives],[falsepositives, truenegatives]],
+                      "accuracy": accuracy,
+                      "precision": precision,
+                      "recall": recall}
         return resultdict
-
 
 
 
@@ -127,7 +148,7 @@ def main():
     myclassifier = NaiveBayes()
     stats = myclassifier.featurestats()
     results = myclassifier.computeclasses(stats)
-    print("test")
+    print(results["confmatrix"])
     sys.exit(0)
 
 if __name__ == "__main__":
