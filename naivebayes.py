@@ -136,7 +136,7 @@ class NaiveBayes:
         accuracy = (truepositives + truenegatives) / (truepositives + truenegatives + falsepositives + falsenegatives)
         resultdict = {"spam": np.array(classifiedspam),
                       "notspam": np.array(classifiednot),
-                      "confmatrix": [[truepositives, falsenegatives],[falsepositives, truenegatives]],
+                      "confmatrix": np.array([[truepositives, falsenegatives], [falsepositives, truenegatives]]),
                       "accuracy": accuracy,
                       "precision": precision,
                       "recall": recall}
@@ -148,7 +148,12 @@ def main():
     myclassifier = NaiveBayes()
     stats = myclassifier.featurestats()
     results = myclassifier.computeclasses(stats)
-    print(results["confmatrix"])
+    print("Accuracy: " + str(results["accuracy"]))
+    print("Precision: " + str(results["precision"]))
+    print("Recall: " + str(results["recall"]))
+    print("Confusion Matrix: " + "\n" + str(results["confmatrix"]))
+    percentmatrix = np.divide(results["confmatrix"], np.sum(results["confmatrix"]))
+    print("Confusion Matrix percentages: " + "\n" + str(percentmatrix))
     sys.exit(0)
 
 if __name__ == "__main__":
