@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import math
 
 
 class NaiveBayes:
@@ -31,18 +32,29 @@ class NaiveBayes:
         # Create training and testing sets
         # each with 906 (40%) spam, 1359 (60%) not-spam
         # 2265 total examples each set
+        # Totalset is slightly larger than
+        # trainingset + testset due to lack of
+        # non-spam examples in dataset to achieve
+        # 40/60 ratio
         self.totalset = np.array(spamlist)
         self.trainingspam = np.array(isspam[:906])
         self.trainingnot = np.array(notspam[:1359])
+        self.trainingset = np.concatenate((self.trainingspam, self.trainingnot))
         self.testingspam = np.array(isspam[907:907+907])
         self.testingnot = np.array(notspam[1360:1360+1359])
+        self.testingset = np.concatenate((self.testingspam, self.testingnot))
         # Total size (number of examples) of each set
         self.trainingsize = self.trainingspam.shape[0] + self.trainingnot.shape[0]
         self.testingsize = self.testingspam.shape[0] + self.testingnot.shape[0]
+        # Prior probability of classes
+        self.trainspamprob = self.trainingspam.shape[0]/self.trainingsize
+        self.trainnotprob = self.trainingnot.shape[0]/self.trainingsize
+        self.testspamprob = self.testingspam.shape[0]/self.testingsize
+        self.testnotprob = self.testingnot.shape[0]/self.testingsize
         self.features = self.trainingspam.shape[1] - 1
 
-    # Compute prior probabilities of training set features
-    def computepriors(self):
+    # Compute mean and stddev of training set features
+    def featurestats(self):
         # Result arrays
         spamfeaturemean = np.zeros(self.features)
         notfeaturemean = np.zeros(self.features)
@@ -80,10 +92,41 @@ class NaiveBayes:
                       "totaldev": totalfeaturedev}
         return resultdict
 
+    def probability(self, x, mean, stddev):
+        assert(stddev != 0)
+        normalize = 1/(math.sqrt(2*math.pi)*stddev)
+        eexp = math.exp(-(pow((x-mean), 2)/(2*pow(stddev, 2))))
+        return normalize * eexp
+
+    def computeclasses(self, featurestats):
+        classifiedspam = []
+        classifiednot = []
+        for i in range(0, self.trainingsize):
+            inputvector = self.testingset[i]
+            spampostprob = 0
+            notpostprob = 0
+            for j in range(0, self.features):
+                spamfeatureprob = np.log(self.probability(inputvector[j], featurestats["spammean"][j], featurestats["spamdev"][j]))
+                spampostprob += spamfeatureprob
+                notfeatureprob = np.log(self.probability(inputvector[j], featurestats["notmean"][j], featurestats["notdev"][j]))
+                notpostprob += notfeatureprob
+            probspam = np.log(self.trainspamprob) + spampostprob
+            probnot = np.log(self.trainnotprob) + notpostprob
+            if probspam > probnot:
+                classifiedspam.append(inputvector)
+            else:
+                classifiednot.append(inputvector)
+        resultdict = {"spam": np.array(classifiedspam),
+                      "notspam": np.array(classifiednot)}
+        return resultdict
+
+
+
 
 def main():
     myclassifier = NaiveBayes()
-    priors = myclassifier.computepriors()
+    stats = myclassifier.featurestats()
+    results = myclassifier.computeclasses(stats)
     print("test")
     sys.exit(0)
 
